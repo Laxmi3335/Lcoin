@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="monetag" content="c8194da8bbd3926d4e4cdf7e178c4af2">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<title>LM Coin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Chakma&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--bg:#0b1020;--card:#151b30;--card2:#1c2440;--line:#2a3354;--pri:#7c5cff;--pri2:#22d3ee;--txt:#e8ecff;--mut:#8f9ac0}
+*{box-sizing:border-box}
+body{font-family:Inter,'Noto Sans Chakma',system-ui,sans-serif;background:var(--bg);color:var(--txt);-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+body.ccp{font-family:'Noto Sans Chakma',Inter,system-ui,sans-serif}
+.mut{color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px}
+.card2{background:var(--card2);border-radius:14px}
+.inp{width:100%;background:#0e1427;border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--txt);outline:none;font-size:15px}
+.inp:focus{border-color:var(--pri)}
+.lbl{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:12px;padding:12px 16px;font-weight:700;font-size:15px;transition:.15s;border:0;cursor:pointer}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-pri{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff}
+.btn-ghost{background:var(--card2);color:var(--txt);border:1px solid var(--line)}
+.btn-green{background:#16a34a;color:#fff}
+.seg{flex:1;padding:10px;border-radius:10px;font-weight:700;font-size:14px;color:var(--mut);background:transparent;border:0}
+.seg.on{background:var(--pri);color:#fff}
+.logo{width:56px;height:56px;border-radius:16px;margin:auto;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff}
+.glow{position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(124,92,255,.35),transparent 70%);top:-120px;left:50%;transform:translateX(-50%);pointer-events:none}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:rgba(15,20,40,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;color:var(--mut);font-size:11px;font-weight:600;background:none;border:0;position:relative}
+.nav button.on{color:#fff}
+.nav button.on .ic{background:linear-gradient(135deg,var(--pri),var(--pri2));}
+.nav .ic{width:38px;height:28px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.dot{position:absolute;top:4px;right:calc(50% - 22px);width:10px;height:10px;border-radius:50%;background:#ef4444}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center}
+.modal>div{width:100%;max-width:480px;max-height:92vh;overflow:auto;background:var(--card);border-radius:22px 22px 0 0;border:1px solid var(--line);padding:18px}
+.hidden{display:none!important}
+.badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;background:#22d3ee22;color:var(--pri2)}
+.b-pending{background:#f59e0b22;color:#fbbf24}.b-approved,.b-paid{background:#16a34a22;color:#4ade80}.b-rejected{background:#ef444422;color:#f87171}
+#toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:90;background:#111936;border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:14px;max-width:90%;box-shadow:0 8px 30px #0008}
+.thumb{aspect-ratio:16/9;background:#0e1427;object-fit:cover;width:100%}
+.spin{width:34px;height:34px;border:4px solid var(--line);border-top-color:var(--pri);border-radius:50%;animation:s 1s linear infinite;margin:auto}
+@keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="toast" class="hidden"></div>
+<div id="splash" class="min-h-screen flex items-center justify-center"><div class="spin"></div></div>
+
+<!-- ============ AUTH ============ -->
+<div id="auth" class="hidden min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+  <div class="glow"></div>
+  <div class="w-full max-w-md card p-6 relative">
+    <div class="text-center mb-5"><div class="logo">LM</div><h1 class="text-2xl font-extrabold mt-3">LM Coin</h1><p class="text-sm mut" data-i18n="tagline"></p></div>
+    <div class="flex bg-black/30 rounded-xl p-1 mb-3">
+      <button class="seg on" id="tabLogin" data-act="authTab" data-t="login" data-i18n="login"></button>
+      <button class="seg" id="tabReg" data-act="authTab" data-t="reg" data-i18n="register"></button>
+    </div>
+    <form id="fLogin" autocomplete="on">
+      <label class="lbl" data-i18n="email"></label><input class="inp" id="lEmail" type="email" required autocomplete="email">
+      <label class="lbl" data-i18n="password"></label><input class="inp" id="lPass" type="password" required autocomplete="current-password">
+      <button class="btn btn-pri w-full mt-4" type="submit" data-i18n="signIn"></button>
+      <button type="button" class="w-full text-sm mut mt-3 underline" data-act="forgot" data-i18n="forgot"></button>
+    </form>
+    <form id="fReg" class="hidden">
+      <label class="lbl" data-i18n="name"></label><input class="inp" id="rName" required minlength="2" maxlength="40" autocomplete="name">
+      <label class="lbl" data-i18n="email"></label><input class="inp" id="rEmail" type="email" required autocomplete="email">
+      <label class="lbl" data-i18n="password"></label><input class="inp" id="rPass" type="password" required minlength="6" autocomplete="new-password">
+      <label class="lbl" data-i18n="country"></label><select class="inp" id="rCountry"></select>
+      <label class="lbl" data-i18n="refCode"></label><input class="inp" id="rRef" maxlength="12" placeholder="XXXXXXXX" style="text-transform:uppercase">
+      <button class="btn btn-pri w-full mt-4" type="submit" data-i18n="createAccount"></button>
+    </form>
+    <p id="authErr" class="text-red-400 text-sm mt-3 hidden"></p>
+    <button class="btn btn-ghost w-full mt-4 text-sm" data-act="lang"><span class="langName"></span></button>
+  </div>
+</div>
+
+<!-- ============ BANNED ============ -->
+<div id="banned" class="hidden min-h-screen flex flex-col items-center justify-center p-6 text-center">
+  <div class="text-5xl mb-3">🚫</div><h2 class="text-xl font-bold" data-i18n="bannedTitle"></h2>
+  <p class="mut text-sm mt-2" data-i18n="bannedMsg"></p>
+  <button class="btn btn-ghost mt-5" data-act="logout" data-i18n="logout"></button>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hidden max-w-md mx-auto min-h-screen pb-24">
+  <header class="sticky top-0 z-20 flex items-center justify-between px-4 py-3" style="background:rgba(11,16,32,.92);backdrop-filter:blur(10px)">
+    <div class="flex items-center gap-2"><div class="logo !m-0" style="width:34px;height:34px;font-size:14px;border-radius:10px">LM</div><b>LM Coin</b></div>
+    <div class="flex items-center gap-2">
+      <div class="card2 px-3 py-1.5 text-sm font-bold"><span id="hBal">0</span> LM</div>
+      <button class="btn btn-ghost !py-1.5 !px-3 text-sm" data-act="lang"><span class="langName"></span></button>
+    </div>
+  </header>
+
+  <!-- VIDEO -->
+  <section id="tab-video" class="tab px-4 pt-2">
+    <h2 class="text-lg font-bold mb-3" data-i18n="video"></h2>
+    <div id="videoGrid" class="grid grid-cols-2 gap-3"></div>
+  </section>
+
+  <!-- MINE -->
+  <section id="tab-mine" class="tab hidden px-4 pt-2">
+    <h2 class="text-lg font-bold mb-3" data-i18n="mine"></h2>
+    <div class="card p-5 text-center">
+      <div class="mut text-sm" data-i18n="miningTitle"></div>
+      <div class="relative w-52 h-52 mx-auto my-4">
+        <svg viewBox="0 0 120 120" class="w-full h-full" style="transform:rotate(-90deg)">
+          <defs><linearGradient id="gr"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>
+          <circle cx="60" cy="60" r="54" fill="none" stroke="#2a3354" stroke-width="8"/>
+          <circle id="ring" cx="60" cy="60" r="54" fill="none" stroke="url(#gr)" stroke-width="8" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="339.3"/>
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <div id="mTime" class="text-3xl font-extrabold tabular-nums">00:00:00</div>
+          <div id="mState" class="text-xs mut mt-1"></div>
+        </div>
+      </div>
+      <button id="mBtn" class="btn btn-pri w-full" data-act="mineBtn"></button>
+      <div class="grid grid-cols-2 gap-3 mt-4 text-left">
+        <div class="card2 p-3"><div class="text-xs mut" data-i18n="rate"></div><div class="font-bold text-sm mt-1"><span id="mRate"></span></div></div>
+        <div class="card2 p-3"><div class="text-xs mut" data-i18n="minedTotal"></div><div class="font-bold text-sm mt-1"><span id="mTotal">0</span> LM</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TASK -->
+  <section id="tab-task" class="tab hidden px-4 pt-2">
+    <h2 class="text-lg font-bold mb-3" data-i18n="task"></h2>
+    <div id="taskGrid" class="grid grid-cols-2 gap-3"></div>
+  </section>
+
+  <!-- COMMUNITY -->
+  <section id="tab-community" class="tab hidden px-4 pt-2">
+    <h2 class="text-lg font-bold mb-3" data-i18n="community"></h2>
+    <div id="commList" class="space-y-3"></div>
+  </section>
+
+  <!-- PROFILE -->
+  <section id="tab-profile" class="tab hidden px-4 pt-2">
+    <div class="card p-5 text-center">
+      <div id="pAvatar" class="mx-auto mb-3"></div>
+      <div class="text-xl font-bold" id="pName"></div>
+      <div class="mut text-sm" id="pEmail"></div>
+      <div class="mt-1 text-sm" id="pCountry"></div>
+      <button class="text-xs mut underline mt-1" data-act="photo" data-i18n="changePhoto"></button>
+    </div>
+    <div class="card p-4 mt-3">
+      <div class="text-xs mut" data-i18n="referralLink"></div>
+      <div class="flex gap-2 mt-2"><input id="pRef" readonly class="inp !text-xs"><button class="btn btn-ghost !px-4" data-act="copyRef" data-i18n="copy"></button></div>
+      <div class="text-xs mut mt-2"><span data-i18n="referrals"></span>: <b id="pRefCount">0</b></div>
+    </div>
+    <div class="grid grid-cols-2 gap-3 mt-3">
+      <div class="card p-4"><div class="text-xs mut" data-i18n="balanceUSD"></div><div class="text-xl font-extrabold mt-1">$<span id="sUSD">0</span></div></div>
+      <div class="card p-4"><div class="text-xs mut" data-i18n="balanceLM"></div><div class="text-xl font-extrabold mt-1"><span id="sLM">0</span> LM</div></div>
+      <div class="card p-4"><div class="text-xs mut" data-i18n="tasksDone"></div><div class="text-xl font-extrabold mt-1" id="sTasks">0</div></div>
+      <div class="card p-4"><div class="text-xs mut" data-i18n="miningBal"></div><div class="text-xl font-extrabold mt-1"><span id="sMined">0</span> LM</div></div>
+    </div>
+    <div class="grid grid-cols-2 gap-3 mt-3">
+      <button class="btn btn-pri" data-act="openExchange">⇄ <span data-i18n="exchange"></span></button>
+      <button class="btn btn-green" data-act="openWithdraw">💸 <span data-i18n="withdraw"></span></button>
+    </div>
+    <div class="card p-4 mt-3"><div class="font-bold mb-2" data-i18n="history"></div><div id="wdList" class="space-y-2 text-sm"></div></div>
+    <div id="supportBtns" class="grid gap-3 mt-3"></div>
+    <button class="btn btn-ghost w-full mt-3" data-act="logout" data-i18n="logout"></button>
+  </section>
+
+  <nav class="nav"><div class="flex max-w-md mx-auto">
+    <button data-act="tab" data-t="video" class="on"><span class="ic">🎬</span><span data-i18n="video"></span></button>
+    <button data-act="tab" data-t="mine"><span class="ic">⛏️</span><span data-i18n="mine"></span><i class="dot hidden" id="mineDot"></i></button>
+    <button data-act="tab" data-t="task"><span class="ic">✅</span><span data-i18n="task"></span></button>
+    <button data-act="tab" data-t="community"><span class="ic">👥</span><span data-i18n="community"></span></button>
+    <button data-act="tab" data-t="profile"><span class="ic">👤</span><span data-i18n="profile"></span></button>
+  </div></nav>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div id="mVideo" class="modal hidden"><div>
+  <div class="flex justify-between items-start gap-2"><h3 class="font-bold" id="vTitle"></h3><button class="btn btn-ghost !py-1 !px-3" data-act="closeVideo">✕</button></div>
+  <div id="ytWrap" class="mt-3 rounded-xl overflow-hidden bg-black" style="aspect-ratio:16/9"><div id="ytBox"></div></div>
+  <div class="card2 p-3 mt-3 flex items-center justify-between">
+    <div><div class="text-xs mut" data-i18n="watchTimer"></div><div id="vTimer" class="text-2xl font-extrabold tabular-nums">00:00</div></div>
+    <div class="text-right"><div class="text-xs mut" data-i18n="reward"></div><div id="vReward" class="font-bold"></div></div>
+  </div>
+  <p id="vNote" class="text-xs mut mt-2"></p>
+  <div id="vBanner" class="mt-3 card2 overflow-hidden" style="min-height:60px"></div>
+</div></div>
+
+<div id="mTask" class="modal hidden"><div>
+  <div class="flex justify-between items-start gap-2"><h3 class="font-bold" id="tTitle"></h3><button class="btn btn-ghost !py-1 !px-3" data-act="closeTask">✕</button></div>
+  <img id="tCover" class="thumb rounded-xl mt-3" alt="">
+  <div class="flex items-center gap-2 mt-3"><span class="badge" id="tReward"></span><span class="badge" id="tStatus"></span></div>
+  <p id="tDesc" class="text-sm mut mt-3 whitespace-pre-wrap"></p>
+  <button id="tOpen" class="btn btn-pri w-full mt-4" data-act="taskOpen"></button>
+  <button id="tProof" class="btn btn-green w-full mt-2" data-act="taskProof"></button>
+  <p id="tNote" class="text-xs mut mt-2"></p>
+</div></div>
+
+<div id="mExch" class="modal hidden"><div>
+  <div class="flex justify-between items-center"><h3 class="font-bold" data-i18n="exchange"></h3><button class="btn btn-ghost !py-1 !px-3" data-act="closeAll">✕</button></div>
+  <div class="card2 p-3 mt-3 text-sm"><div id="xRate"></div><div class="mut text-xs mt-1" id="xMin"></div></div>
+  <label class="lbl" data-i18n="amountLM"></label>
+  <input id="xAmt" class="inp" type="number" step="any" min="0" inputmode="decimal">
+  <div class="text-xs mut mt-1"><span data-i18n="available"></span>: <b id="xAvail"></b> LM <button class="underline ml-2" data-act="xMax" data-i18n="max"></button></div>
+  <div class="card2 p-3 mt-3 text-sm space-y-1"><div class="flex justify-between"><span class="mut" data-i18n="fee"></span><b id="xFee">0</b></div><div class="flex justify-between"><span class="mut" data-i18n="youGet"></span><b id="xGet">$0</b></div><div class="flex justify-between"><span class="mut">≈ BDT</span><b id="xBdt">0</b></div></div>
+  <button class="btn btn-pri w-full mt-4" data-act="doExchange" data-i18n="confirm"></button>
+</div></div>
+
+<div id="mWd" class="modal hidden"><div>
+  <div class="flex justify-between items-center"><h3 class="font-bold" data-i18n="withdraw"></h3><button class="btn btn-ghost !py-1 !px-3" data-act="closeAll">✕</button></div>
+  <div id="wdBody"></div>
+</div></div>
+
+<div id="ad" class="hidden" style="position:fixed;inset:0;z-index:80;background:#05070f;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px">
+  <div class="text-xs mut mb-2" data-i18n="adLabel"></div>
+  <div id="adBox" class="w-full max-w-md card2 overflow-auto" style="min-height:260px;max-height:70vh"></div>
+  <button id="adSkip" class="btn btn-pri mt-4" disabled></button>
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,sendPasswordResetEmail} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,getDoc,setDoc,updateDoc,collection,query,where,onSnapshot,writeBatch,serverTimestamp,increment,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ====== 1) PASTE YOUR FIREBASE CONFIG HERE ====== */
+const firebaseConfig = {
+  apiKey: "AIzaSyAggGgDK-qm9WhdOjLO1gT5tojgLK-x_IA",
+  authDomain: "lmcoin-107f9.firebaseapp.com",
+  databaseURL: "https://lmcoin-107f9-default-rtdb.firebaseio.com",
+  projectId: "lmcoin-107f9",
+  storageBucket: "lmcoin-107f9.firebasestorage.app",
+  messagingSenderId: "996172183940",
+  appId: "1:996172183940:web:b5c86e410b4b9f1ecd85d1"
+};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=(n,d=8)=>{n=Number(n)||0;return n.toFixed(d).replace(/\.?0+$/,'')||'0'};
+const flag=cc=>cc&&cc.length===2&&cc!=='XX'?String.fromCodePoint(...[...cc.toUpperCase()].map(c=>127397+c.charCodeAt(0))):'🌐';
+const mmss=s=>{s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const hms=s=>{s=Math.max(0,Math.floor(s));return [Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(x=>String(x).padStart(2,'0')).join(':')};
+
+/* ====== i18n (English + Chakma) ======
+   Chakma labels for the 5 tabs are built in. Every other Chakma string can be added from
+   admin.html > Settings > Chakma translations (JSON {key:"text"}). Missing keys fall back to English. */
+const EN={tagline:'Watch, mine & complete tasks to earn LM Coin',login:'Login',register:'Register',email:'Email',password:'Password',name:'Name',country:'Country',refCode:'Referral code (optional)',createAccount:'Create account',signIn:'Sign in',forgot:'Forgot password?',logout:'Logout',
+video:'Video',mine:'Mine',task:'Task',community:'Community',profile:'Profile',
+noVideos:'No videos yet',play:'Play',reward:'Reward',adLabel:'Advertisement',skipIn:'Skip in',skip:'Skip',watchTimer:'Watch timer',timerNote:'Timer runs only while the video is playing.',rewarded:'Reward added to your balance!',alreadyRewarded:'You already received the reward for this video.',
+miningTitle:'LM Coin mining',startMining:'Start mining',mining:'Mining…',claim:'Claim reward',rate:'Mining rate',minedTotal:'Total mined',idle:'Ready to start',running:'Mining in progress',ready:'Mining complete! Claim now',per:'per',hours:'hours',mineDone:'⛏️ Mining finished – claim your LM!',claimed:'Mining reward claimed!',
+noTasks:'No tasks available',openLink:'Open link',proofSubmit:'Submit proof',linkLocked:'Link locked ✓',openFirst:'Open the link and wait for the timer, then submit proof.',waitTimer:'Please wait',pendingReview:'Pending review',approved:'Approved',rejected:'Rejected',proofSent:'Proof request sent. Now send your screenshot to the admin on Telegram.',status_pending:'Pending',status_approved:'Approved',status_rejected:'Rejected',
+noLinks:'No links yet',
+changePhoto:'Change photo (image URL)',referralLink:'Your referral link',copy:'Copy',copied:'Copied!',referrals:'Referrals',balanceUSD:'Balance (USD)',balanceLM:'Balance (LM)',tasksDone:'Completed tasks',miningBal:'Mining balance',exchange:'Exchange',withdraw:'Withdraw',history:'Withdrawal history',support:'Support',noHistory:'No withdrawals yet',
+exchangeRate:'Rate',feeLabel:'Fee',minLabel:'Minimum',amountLM:'Amount (LM)',available:'Available',max:'Max',fee:'Fee',youGet:'You get',confirm:'Confirm',exchanged:'Exchange successful!',
+method:'Payment method',account:'Account / wallet address',amountUSD:'Amount (USD)',minimum:'Minimum',submit:'Submit request',noMethods:'No payment methods available for your country.',wdSent:'Withdrawal request submitted!',insufficient:'Insufficient balance',
+bannedTitle:'Account suspended',bannedMsg:'Your account has been banned. Contact support.',deviceUsed:'This device already has an account.',
+close:'Close',saved:'Saved'};
+const CCP={video:'𑄞𑄨𑄓𑄨𑄃𑄱',mine:'𑄞𑄣',task:'𑄦𑄟𑄴',community:'𑄡𑄱𑄘',profile:'𑄟𑄪𑄃𑄭',langName:'𑄌𑄇𑄴𑄟𑄧'};
+if(location.search.includes('keys=1')){document.body.innerHTML='<p style="padding:10px;font:14px sans-serif">Copy this JSON, translate the values into Chakma, and paste it in admin.html → Settings → Chakma translations.</p><textarea style="width:96%;height:80vh;margin:2%;font:13px monospace">'+JSON.stringify(EN,null,2)+'</textarea>';throw 0}
+
+let lang=localStorage.getItem('lm_lang')||'en';
+const DEF={lmRateUSD:5,exchangeFee:3,minExchangeLM:0.005,mineReward:0.00005,mineSeconds:7200,bdtPerUSD:100,taskTimerSec:30,adSkipSec:3,bannerEverySec:60,deviceFingerprint:true,proofTelegram:'',supportTelegram:'',supportWhatsApp:'',links:{},ads:{interstitial:'',banner:''},i18nCcp:{},
+payments:{bkash:{name:'bKash',scope:'BD',enabled:true,minUSD:1,hint:'bKash number'},nagad:{name:'Nagad',scope:'BD',enabled:true,minUSD:1,hint:'Nagad number'},binance:{name:'Binance Pay',scope:'INTL',enabled:true,minUSD:5,hint:'Binance Pay ID'},usdt:{name:'USDT (TRC20/BEP20)',scope:'INTL',enabled:true,minUSD:5,hint:'Wallet address + network'},nsave:{name:'Nsave',scope:'INTL',enabled:true,minUSD:5,hint:'Nsave account'}}};
+let S=JSON.parse(JSON.stringify(DEF));
+const t=k=>lang==='ccp'?(S.i18nCcp?.[k]||CCP[k]||EN[k]||k):(EN[k]||k);
+
+let me=null,uid=null,videos=[],tasks=[],reqs={},watched=new Set(),wds=[],subs=[],registering=false,tab='video',lastMine='';
+
+/* ====== helpers ====== */
+function toast(m){const e=$('#toast');e.textContent=m;e.classList.remove('hidden');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add('hidden'),3200)}
+const friendly=x=>{const c=x?.code||'';return ({'auth/email-already-in-use':'Email already registered','auth/invalid-credential':'Wrong email or password','auth/invalid-email':'Invalid email','auth/weak-password':'Password must be at least 6 characters','auth/too-many-requests':'Too many attempts, try later','permission-denied':'Permission denied (device limit / rules)'})[c]||x?.message||String(x)};
+function injectHTML(el,html){el.innerHTML='';const tmp=document.createElement('div');tmp.innerHTML=html;[...tmp.childNodes].forEach(n=>{if(n.nodeName==='SCRIPT'){const s=document.createElement('script');[...n.attributes].forEach(a=>s.setAttribute(a.name,a.value));s.text=n.textContent;el.appendChild(s)}else el.appendChild(n)})}
+const openM=id=>$('#'+id).classList.remove('hidden');
+function closeAll(){$$('.modal').forEach(m=>m.classList.add('hidden'))}
+function showAd(cb){
+  $('#ad').classList.remove('hidden');
+  injectHTML($('#adBox'),S.ads.interstitial||'<div class="mut text-sm text-center p-8">'+esc(t('adLabel'))+'</div>');
+  let n=S.adSkipSec;const b=$('#adSkip');b.disabled=true;b.textContent=t('skipIn')+' '+n;
+  const iv=setInterval(()=>{n--;if(n>0)b.textContent=t('skipIn')+' '+n;else{clearInterval(iv);b.disabled=false;b.textContent=t('skip')+' ▶'}},1000);
+  b.onclick=()=>{if(b.disabled)return;$('#ad').classList.add('hidden');$('#adBox').innerHTML='';cb&&cb()};
+}
+
+/* ====== language ====== */
+function applyLang(){
+  document.body.classList.toggle('ccp',lang==='ccp');document.documentElement.lang=lang==='ccp'?'ccp':'en';
+  $$('[data-i18n]').forEach(e=>e.textContent=t(e.dataset.i18n));
+  $$('.langName').forEach(e=>e.textContent=lang==='ccp'?'English':CCP.langName);
+  if(me)renderAll();
+}
+
+/* ====== countries ====== */
+const COUNTRIES=[['BD','Bangladesh'],['IN','India'],['PK','Pakistan'],['NP','Nepal'],['LK','Sri Lanka'],['MM','Myanmar'],['ID','Indonesia'],['MY','Malaysia'],['PH','Philippines'],['TH','Thailand'],['VN','Vietnam'],['SG','Singapore'],['CN','China'],['JP','Japan'],['KR','South Korea'],['AE','UAE'],['SA','Saudi Arabia'],['QA','Qatar'],['KW','Kuwait'],['OM','Oman'],['BH','Bahrain'],['TR','Turkey'],['EG','Egypt'],['NG','Nigeria'],['GH','Ghana'],['KE','Kenya'],['ZA','South Africa'],['US','United States'],['CA','Canada'],['MX','Mexico'],['BR','Brazil'],['GB','United Kingdom'],['DE','Germany'],['FR','France'],['IT','Italy'],['ES','Spain'],['NL','Netherlands'],['RU','Russia'],['UA','Ukraine'],['AU','Australia'],['NZ','New Zealand'],['XX','Other']];
+$('#rCountry').innerHTML=COUNTRIES.map(([c,n])=>`<option value="${c}">${flag(c)} ${c} — ${n}</option>`).join('');
+fetch('https://ipapi.co/json/').then(r=>r.json()).then(j=>{const c=(j.country_code||'').toUpperCase();if(COUNTRIES.some(x=>x[0]===c))$('#rCountry').value=c}).catch(()=>{});
+const urlRef=(new URLSearchParams(location.search).get('ref')||'').toUpperCase();
+if(urlRef)localStorage.setItem('lm_ref',urlRef);
+$('#rRef').value=localStorage.getItem('lm_ref')||'';
+
+/* ====== device limit ====== */
+function getUuid(){let u=localStorage.getItem('lm_uuid');if(!u){u='uuid_'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2));localStorage.setItem('lm_uuid',u)}return u}
+async function fingerprint(){
+  let c='',gl='';
+  try{const cv=document.createElement('canvas'),g=cv.getContext('2d');g.textBaseline='top';g.font='14px Arial';g.fillText('LM♦Coin☺',2,2);c=cv.toDataURL()}catch{}
+  try{const g=document.createElement('canvas').getContext('webgl'),e=g.getExtension('WEBGL_debug_renderer_info');gl=g.getParameter(e.UNMASKED_RENDERER_WEBGL)}catch{}
+  const raw=[navigator.userAgent,screen.width,screen.height,screen.colorDepth,devicePixelRatio,navigator.language,Intl.DateTimeFormat().resolvedOptions().timeZone,navigator.hardwareConcurrency,navigator.maxTouchPoints,c,gl].join('|');
+  let hex='';
+  if(crypto.subtle){const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw));hex=[...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+  else{let h=5381;for(const ch of raw)h=((h<<5)+h+ch.charCodeAt(0))>>>0;hex='x'+h.toString(16)}
+  return 'fp_'+hex;
+}
+const genCode=()=>Array.from({length:8},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
+
+/* ====== auth ====== */
+function authErr(m){const e=$('#authErr');e.textContent=m||'';e.classList.toggle('hidden',!m)}
+$('#fLogin').addEventListener('submit',async e=>{e.preventDefault();authErr('');const b=e.submitter;b.disabled=true;
+  try{await signInWithEmailAndPassword(auth,$('#lEmail').value.trim(),$('#lPass').value)}catch(x){authErr(friendly(x))}b.disabled=false});
+$('#fReg').addEventListener('submit',async e=>{
+  e.preventDefault();authErr('');const b=e.submitter;b.disabled=true;
+  const name=$('#rName').value.trim(),email=$('#rEmail').value.trim().toLowerCase(),pw=$('#rPass').value,country=$('#rCountry').value,ref=$('#rRef').value.trim().toUpperCase();
+  try{
+    const uuid=getUuid(),fp=await fingerprint();
+    const chk=[getDoc(doc(db,'devices',uuid))];if(S.deviceFingerprint)chk.push(getDoc(doc(db,'devices',fp)));
+    if((await Promise.all(chk)).some(s=>s.exists())||localStorage.getItem('lm_acct'))throw new Error(t('deviceUsed'));
+    registering=true;
+    const cred=await createUserWithEmailAndPassword(auth,email,pw),id=cred.user.uid;
+    try{
+      let referredBy=null;
+      if(ref){const rs=await getDoc(doc(db,'refcodes',ref));if(rs.exists()&&rs.data().uid!==id)referredBy=rs.data().uid}
+      const code=genCode(),bt=writeBatch(db);
+      bt.set(doc(db,'users',id),{uid:id,name,email,country,refCode:code,referredBy,balanceLM:0,balanceUSD:0,earnedLM:0,earnedUSD:0,minedLM:0,tasksDone:0,miningStart:null,banned:false,photo:'',deviceFp:fp,deviceUuid:uuid,createdAt:serverTimestamp()});
+      bt.set(doc(db,'refcodes',code),{uid:id});
+      bt.set(doc(db,'devices',uuid),{uid:id,at:serverTimestamp()});
+      if(S.deviceFingerprint)bt.set(doc(db,'devices',fp),{uid:id,at:serverTimestamp()});
+      await bt.commit();
+    }catch(x){await cred.user.delete().catch(()=>{});throw x}
+    localStorage.setItem('lm_acct',id);registering=false;startSession(auth.currentUser);
+  }catch(x){registering=false;authErr(friendly(x))}
+  b.disabled=false;
+});
+
+onAuthStateChanged(auth,u=>{
+  $('#splash').classList.add('hidden');
+  if(registering)return;
+  if(u)startSession(u);else{stopSession();$('#app').classList.add('hidden');$('#banned').classList.add('hidden');$('#auth').classList.remove('hidden')}
+});
+
+function stopSession(){subs.forEach(f=>f());subs=[];me=null;uid=null}
+function startSession(u){
+  stopSession();uid=u.uid;
+  subs.push(onSnapshot(doc(db,'users',uid),snap=>{
+    if(!snap.exists()){if(!registering){toast('Profile not found');signOut(auth)}return}
+    const d=snap.data({serverTimestamps:'estimate'});
+    me={...d,miningMs:d.miningStart?d.miningStart.toMillis():null};
+    $('#auth').classList.add('hidden');
+    if(me.banned){$('#app').classList.add('hidden');$('#banned').classList.remove('hidden');return}
+    $('#banned').classList.add('hidden');$('#app').classList.remove('hidden');renderAll();
+  },e=>toast(friendly(e))));
+  subs.push(onSnapshot(query(collection(db,'videos'),where('active','==',true)),s=>{videos=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));renderVideos()}));
+  subs.push(onSnapshot(query(collection(db,'tasks'),where('active','==',true)),s=>{tasks=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.audience!=='one'||x.targetUid===uid).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));renderTasks()}));
+  subs.push(onSnapshot(query(collection(db,'task_requests'),where('uid','==',uid)),s=>{reqs={};s.docs.forEach(d=>reqs[d.data().taskId]=d.data().status);renderTasks();if(!$('#mTask').classList.contains('hidden'))renderTaskModal()}));
+  subs.push(onSnapshot(collection(db,'users',uid,'watched'),s=>{watched=new Set(s.docs.map(d=>d.id))}));
+  subs.push(onSnapshot(query(collection(db,'withdrawals'),where('uid','==',uid)),s=>{wds=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));renderWds()}));
+  getDocs(query(collection(db,'users'),where('referredBy','==',uid))).then(s=>$('#pRefCount').textContent=s.size).catch(()=>{});
+}
+onSnapshot(doc(db,'settings','main'),s=>{
+  if(!s.exists())return;const d=s.data();
+  S={...DEF,...d,links:{...d.links},ads:{...DEF.ads,...d.ads},i18nCcp:d.i18nCcp||{},payments:d.payments||DEF.payments};
+  applyLang();
+},()=>{});
+
+/* ====== tabs / render ====== */
+function switchTab(n){tab=n;$$('.tab').forEach(s=>s.classList.toggle('hidden',s.id!=='tab-'+n));$$('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===n));window.scrollTo(0,0);if(n==='mine')$('#mineDot').classList.add('hidden')}
+function renderAll(){renderHeader();renderVideos();renderMine();renderTasks();renderCommunity();renderProfile();renderWds()}
+function renderHeader(){$('#hBal').textContent=fmt(me.balanceLM,6)}
+
+function renderVideos(){
+  const g=$('#videoGrid');if(!g)return;
+  if(!videos.length){g.innerHTML=`<div class="col-span-2 mut text-center py-10">${esc(t('noVideos'))}</div>`;return}
+  g.innerHTML=videos.map(v=>`<div class="card overflow-hidden"><img class="thumb" loading="lazy" src="https://i.ytimg.com/vi/${esc(v.ytId)}/hqdefault.jpg" alt=""><div class="p-3"><div class="text-sm font-semibold leading-tight" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(v.title)}</div><div class="flex items-center justify-between mt-2"><span class="badge">+${fmt(v.reward,6)} LM</span><span class="text-xs mut">${mmss(v.duration)}</span></div><button class="btn btn-pri w-full !py-2 mt-2 text-sm" data-act="play" data-id="${v.id}">▶ ${esc(t('play'))}</button></div></div>`).join('');
+}
+
+/* ---- video player ---- */
+let yt=null,vIv=null,bIv=null,vs={running:false,left:0,v:null,done:false};
+const loadYT=()=>new Promise(r=>{if(window.YT&&YT.Player)return r();const s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';window.onYouTubeIframeAPIReady=()=>r();document.head.appendChild(s)});
+function playVideo(id){
+  const v=videos.find(x=>x.id===id);if(!v)return;
+  showAd(async()=>{
+    vs={running:false,left:Number(v.duration)||0,v,done:watched.has(v.id)};
+    $('#vTitle').textContent=v.title;$('#vReward').textContent='+'+fmt(v.reward,6)+' LM';
+    $('#vNote').textContent=vs.done?t('alreadyRewarded'):t('timerNote');
+    $('#vTimer').textContent=vs.done?'✓':mmss(vs.left);
+    openM('mVideo');
+    await loadYT();
+    yt=new YT.Player('ytBox',{width:'100%',height:'100%',videoId:v.ytId,playerVars:{playsinline:1,rel:0,modestbranding:1},events:{onStateChange:e=>{vs.running=e.data===1}}});
+    const ban=()=>injectHTML($('#vBanner'),S.ads.banner||'<div class="mut text-xs text-center p-5">'+esc(t('adLabel'))+'</div>');
+    ban();bIv=setInterval(ban,Math.max(15,S.bannerEverySec)*1000);
+    vIv=setInterval(()=>{if(!vs.running||vs.done)return;vs.left--;$('#vTimer').textContent=mmss(vs.left);if(vs.left<=0)finishVideo()},1000);
+  });
+}
+async function finishVideo(){
+  vs.done=true;$('#vTimer').textContent='✓';const v=vs.v,r=Number(v.reward)||0;
+  if(r<=0||watched.has(v.id))return;
+  try{
+    const b=writeBatch(db);
+    b.set(doc(db,'users',uid,'watched',v.id),{at:serverTimestamp()});
+    b.update(doc(db,'users',uid),{balanceLM:increment(r),earnedLM:increment(r),lastVideoId:v.id});
+    await b.commit();$('#vNote').textContent=t('rewarded');toast('+'+fmt(r,6)+' LM');
+  }catch(x){toast(friendly(x))}
+}
+function closeVideo(){clearInterval(vIv);clearInterval(bIv);try{yt&&yt.destroy()}catch{}yt=null;$('#ytWrap').innerHTML='<div id="ytBox"></div>';$('#vBanner').innerHTML='';$('#mVideo').classList.add('hidden')}
+
+/* ---- mining ---- */
+function mineState(){
+  if(!me?.miningMs)return{s:'idle'};
+  const total=S.mineSeconds*1000,left=me.miningMs+total-Date.now();
+  return left>0?{s:'run',left,total}:{s:'ready'};
+}
+function renderMine(){
+  if(!me)return;const m=mineState(),b=$('#mBtn'),ring=$('#ring');
+  $('#mRate').textContent=fmt(S.mineReward,8)+' LM / '+fmt(S.mineSeconds/3600,2)+' '+t('hours');
+  $('#mTotal').textContent=fmt(me.minedLM,8);
+  if(m.s==='idle'){$('#mTime').textContent=hms(S.mineSeconds);$('#mState').textContent=t('idle');ring.style.strokeDashoffset=339.3;b.textContent='⛏️ '+t('startMining');b.disabled=false}
+  else if(m.s==='run'){$('#mTime').textContent=hms(m.left/1000);$('#mState').textContent=t('running');ring.style.strokeDashoffset=339.3*(m.left/m.total);b.textContent=t('mining');b.disabled=true}
+  else{$('#mTime').textContent='00:00:00';$('#mState').textContent=t('ready');ring.style.strokeDashoffset=0;b.textContent='🎁 '+t('claim')+' (+'+fmt(S.mineReward,8)+' LM)';b.disabled=false}
+  if(lastMine==='run'&&m.s==='ready'){toast(t('mineDone'));if(tab!=='mine')$('#mineDot').classList.remove('hidden');try{if('Notification' in window&&Notification.permission==='granted')new Notification('LM Coin',{body:t('mineDone')})}catch{}}
+  if(m.s==='ready'&&!lastMine&&tab!=='mine')$('#mineDot').classList.remove('hidden');
+  lastMine=m.s;
+}
+setInterval(()=>{if(me&&!me.banned)renderMine()},1000);
+function mineBtn(){
+  const m=mineState();
+  if(m.s==='idle'){
+    try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission()}catch{}
+    showAd(async()=>{try{await updateDoc(doc(db,'users',uid),{miningStart:serverTimestamp()})}catch(x){toast(friendly(x))}});
+  }else if(m.s==='ready'){
+    showAd(async()=>{try{const r=S.mineReward;await updateDoc(doc(db,'users',uid),{balanceLM:increment(r),earnedLM:increment(r),minedLM:increment(r),miningStart:null});toast(t('claimed'))}catch(x){toast(friendly(x))}});
+  }
+}
+
+/* ---- tasks ---- */
+function renderTasks(){
+  const g=$('#taskGrid');if(!g||!me)return;
+  if(!tasks.length){g.innerHTML=`<div class="col-span-2 mut text-center py-10">${esc(t('noTasks'))}</div>`;return}
+  g.innerHTML=tasks.map(k=>{const st=reqs[k.id];return `<div class="card overflow-hidden" data-act="openTask" data-id="${k.id}">${k.cover?`<img class="thumb" loading="lazy" src="${esc(k.cover)}" alt="">`:`<div class="thumb flex items-center justify-center text-4xl" style="background:linear-gradient(135deg,#7c5cff55,#22d3ee55)">✅</div>`}<div class="p-3"><div class="text-sm font-semibold leading-tight" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(k.title)}</div><div class="flex items-center justify-between mt-2"><span class="badge">${k.currency==='USD'?'$'+fmt(k.reward,4):fmt(k.reward,6)+' LM'}</span>${st?`<span class="badge b-${st}">${esc(t('status_'+st))}</span>`:''}</div></div></div>`}).join('');
+}
+let curTask=null,tIv=null;
+const tKey=id=>`lm_task_${uid}_${id}`;
+function renderTaskModal(){
+  const k=curTask;if(!k)return;const st=reqs[k.id];
+  $('#tTitle').textContent=k.title;$('#tDesc').textContent=k.desc||'';
+  const c=$('#tCover');c.classList.toggle('hidden',!k.cover);if(k.cover)c.src=k.cover;
+  $('#tReward').textContent=k.currency==='USD'?'$'+fmt(k.reward,4):fmt(k.reward,6)+' LM';
+  const se=$('#tStatus');se.className='badge'+(st?' b-'+st:' hidden');se.textContent=st?t('status_'+st):'';
+  const o=$('#tOpen'),p=$('#tProof'),n=$('#tNote');
+  const at=Number(localStorage.getItem(tKey(k.id)))||0,el=at?(Date.now()-at)/1000:0,N=S.taskTimerSec;
+  if(st){o.disabled=true;o.textContent=t('linkLocked');p.disabled=true;p.textContent=t('status_'+st);n.textContent=st==='pending'?t('proofSent'):''}
+  else if(!at){o.disabled=false;o.textContent='🔗 '+t('openLink');p.disabled=true;p.textContent=t('proofSubmit');n.textContent=t('openFirst')}
+  else if(el<N){o.disabled=false;o.textContent='⏳ '+t('waitTimer')+' '+Math.ceil(N-el)+'s';p.disabled=true;p.textContent=t('proofSubmit');n.textContent=t('openFirst')}
+  else{o.disabled=true;o.textContent=t('linkLocked');p.disabled=false;p.textContent='📤 '+t('proofSubmit');n.textContent=''}
+}
+function openTask(id){curTask=tasks.find(x=>x.id===id);if(!curTask)return;renderTaskModal();openM('mTask');clearInterval(tIv);tIv=setInterval(renderTaskModal,1000)}
+function taskOpen(){
+  const k=curTask;if(!k||!/^https?:\/\//i.test(k.link||''))return toast('Invalid link');
+  if(!localStorage.getItem(tKey(k.id)))localStorage.setItem(tKey(k.id),Date.now());
+  window.open(k.link,'_blank','noopener');renderTaskModal();
+}
+async function taskProof(){
+  const k=curTask;if(!k||reqs[k.id])return;
+  const rid=uid+'_'+k.id;
+  try{
+    await setDoc(doc(db,'task_requests',rid),{uid,taskId:k.id,taskTitle:k.title,email:me.email,name:me.name,status:'pending',createdAt:serverTimestamp()});
+    toast(t('proofSent'));
+    const h=(S.proofTelegram||S.supportTelegram||'').replace(/^@|^https?:\/\/t\.me\//,'');
+    if(h)window.open('https://t.me/'+encodeURIComponent(h)+'?text='+encodeURIComponent(`Task proof\nTask: ${k.title}\nEmail: ${me.email}\nRef: ${rid}`),'_blank','noopener');
+  }catch(x){toast(friendly(x))}
+}
+
+/* ---- community ---- */
+const LINKS=[['website','🌐','Website'],['youtube','▶️','YouTube'],['telegramChannel','📣','Telegram Channel'],['telegramGroup','💬','Telegram Group'],['facebook','📘','Facebook'],['instagram','📸','Instagram'],['tiktok','🎵','TikTok'],['twitter','🐦','X / Twitter']];
+function renderCommunity(){
+  const items=LINKS.filter(([k])=>/^https?:\/\//i.test(S.links?.[k]||''));
+  $('#commList').innerHTML=items.length?items.map(([k,ic,n])=>`<a class="card p-4 flex items-center gap-3" href="${esc(S.links[k])}" target="_blank" rel="noopener"><span class="text-2xl">${ic}</span><b class="flex-1">${n}</b><span class="mut">↗</span></a>`).join(''):`<div class="mut text-center py-10">${esc(t('noLinks'))}</div>`;
+}
+
+/* ---- profile ---- */
+function renderProfile(){
+  const av=me.photo&&/^https:\/\//.test(me.photo)?`<img src="${esc(me.photo)}" class="w-20 h-20 rounded-full object-cover mx-auto" alt="">`:`<div class="logo !w-20 !h-20 !rounded-full !text-3xl">${esc((me.name||'?')[0].toUpperCase())}</div>`;
+  $('#pAvatar').innerHTML=av;$('#pName').textContent=me.name;$('#pEmail').textContent=me.email;$('#pCountry').textContent=flag(me.country)+' '+me.country;
+  $('#pRef').value=location.origin+location.pathname+'?ref='+me.refCode;
+  $('#sUSD').textContent=fmt(me.balanceUSD,4);$('#sLM').textContent=fmt(me.balanceLM,8);$('#sTasks').textContent=me.tasksDone||0;$('#sMined').textContent=fmt(me.minedLM,8);
+  const b=[];
+  if(S.supportTelegram)b.push(`<a class="btn btn-ghost" target="_blank" rel="noopener" href="https://t.me/${encodeURIComponent(S.supportTelegram.replace(/^@/,''))}">✈️ ${esc(t('support'))} — Telegram</a>`);
+  if(S.supportWhatsApp)b.push(`<a class="btn btn-ghost" target="_blank" rel="noopener" href="https://wa.me/${S.supportWhatsApp.replace(/\D/g,'')}">💬 ${esc(t('support'))} — WhatsApp</a>`);
+  $('#supportBtns').innerHTML=b.join('');
+}
+function renderWds(){
+  const e=$('#wdList');if(!e)return;
+  e.innerHTML=wds.length?wds.map(w=>`<div class="card2 p-3 flex items-center justify-between"><div><div class="font-semibold">$${fmt(w.amountUSD,4)} · ${esc(w.methodName||w.method)}</div><div class="text-xs mut">${w.createdAt?new Date(w.createdAt.seconds*1000).toLocaleString():''}</div></div><span class="badge b-${esc(w.status)}">${esc(w.status)}</span></div>`).join(''):`<div class="mut text-center">${esc(t('noHistory'))}</div>`;
+}
+
+/* ---- exchange ---- */
+function calcExch(){
+  const a=Number($('#xAmt').value)||0,fee=a*S.exchangeFee/100,usd=Math.floor(a*S.lmRateUSD*(1-S.exchangeFee/100)*1e8)/1e8;
+  $('#xFee').textContent=fmt(fee,8)+' LM ('+S.exchangeFee+'%)';$('#xGet').textContent='$'+fmt(usd,6);$('#xBdt').textContent='৳'+fmt(usd*S.bdtPerUSD,2);return{a,usd};
+}
+function openExchange(){
+  $('#xRate').textContent=`1 LM = $${fmt(S.lmRateUSD,6)} (≈ ৳${fmt(S.lmRateUSD*S.bdtPerUSD,2)}) · ${t('feeLabel')} ${S.exchangeFee}%`;
+  $('#xMin').textContent=t('minLabel')+': '+fmt(S.minExchangeLM,8)+' LM';$('#xAvail').textContent=fmt(me.balanceLM,8);$('#xAmt').value='';calcExch();openM('mExch');
+}
+$('#xAmt').addEventListener('input',calcExch);
+async function doExchange(){
+  const{a,usd}=calcExch();
+  if(a<S.minExchangeLM)return toast(t('minLabel')+': '+fmt(S.minExchangeLM,8)+' LM');
+  if(a>me.balanceLM)return toast(t('insufficient'));
+  try{await updateDoc(doc(db,'users',uid),{balanceLM:increment(-a),balanceUSD:increment(usd)});toast(t('exchanged'));closeAll()}catch(x){toast(friendly(x))}
+}
+
+/* ---- withdraw ---- */
+const methodsFor=()=>Object.entries(S.payments||{}).filter(([k,m])=>m.enabled&&(m.scope==='ALL'||(m.scope==='BD'&&me.country==='BD')||(m.scope==='INTL'&&me.country!=='BD')));
+function openWithdraw(){
+  const ms=methodsFor(),b=$('#wdBody');
+  if(!ms.length)b.innerHTML=`<p class="mut mt-4">${esc(t('noMethods'))}</p>`;
+  else{
+    b.innerHTML=`<label class="lbl">${esc(t('method'))}</label><select id="wMethod" class="inp">${ms.map(([k,m])=>`<option value="${esc(k)}">${esc(m.name)}</option>`).join('')}</select>
+    <label class="lbl">${esc(t('account'))}</label><input id="wAcc" class="inp" maxlength="120">
+    <label class="lbl">${esc(t('amountUSD'))}</label><input id="wAmt" class="inp" type="number" step="any" inputmode="decimal">
+    <div class="text-xs mut mt-1"><span>${esc(t('available'))}: <b>$${fmt(me.balanceUSD,4)}</b></span> · <span id="wMin"></span> · <span id="wBdt"></span></div>
+    <button class="btn btn-green w-full mt-4" data-act="doWithdraw">${esc(t('submit'))}</button>`;
+    const upd=()=>{const m=S.payments[$('#wMethod').value];$('#wAcc').placeholder=m.hint||'';$('#wMin').textContent=t('minimum')+': $'+fmt(m.minUSD,4);$('#wBdt').textContent=me.country==='BD'?'≈ ৳'+fmt((Number($('#wAmt').value)||0)*S.bdtPerUSD,2):''};
+    $('#wMethod').onchange=upd;$('#wAmt').oninput=upd;upd();
+  }
+  openM('mWd');
+}
+async function doWithdraw(){
+  const key=$('#wMethod').value,m=S.payments[key],acc=$('#wAcc').value.trim(),amt=Math.floor((Number($('#wAmt').value)||0)*1e6)/1e6;
+  if(acc.length<3)return toast(t('account'));
+  if(amt<m.minUSD)return toast(t('minimum')+': $'+fmt(m.minUSD,4));
+  if(amt>me.balanceUSD)return toast(t('insufficient'));
+  try{
+    const ref=doc(collection(db,'withdrawals')),bt=writeBatch(db);
+    bt.set(ref,{uid,email:me.email,name:me.name,country:me.country,method:key,methodName:m.name,account:acc,amountUSD:amt,status:'pending',createdAt:serverTimestamp()});
+    bt.update(doc(db,'users',uid),{balanceUSD:increment(-amt),lastWithdrawalId:ref.id});
+    await bt.commit();toast(t('wdSent'));closeAll();
+  }catch(x){toast(friendly(x))}
+}
+
+/* ====== actions (event delegation) ====== */
+const A={
+  authTab:d=>{const r=d.t==='reg';$('#fLogin').classList.toggle('hidden',r);$('#fReg').classList.toggle('hidden',!r);$('#tabLogin').classList.toggle('on',!r);$('#tabReg').classList.toggle('on',r);authErr('')},
+  forgot:async()=>{const e=$('#lEmail').value.trim();if(!e)return authErr(t('email'));try{await sendPasswordResetEmail(auth,e);toast('Reset email sent')}catch(x){authErr(friendly(x))}},
+  lang:()=>{lang=lang==='ccp'?'en':'ccp';localStorage.setItem('lm_lang',lang);applyLang()},
+  logout:()=>signOut(auth),
+  tab:d=>switchTab(d.t),
+  play:d=>playVideo(d.id),closeVideo,
+  mineBtn,
+  openTask:d=>openTask(d.id),closeTask:()=>{clearInterval(tIv);$('#mTask').classList.add('hidden')},taskOpen,taskProof,
+  copyRef:()=>{navigator.clipboard?.writeText($('#pRef').value);toast(t('copied'))},
+  photo:async()=>{const u=prompt('https://… image URL');if(!u)return;if(!/^https:\/\//.test(u))return toast('HTTPS only');try{await updateDoc(doc(db,'users',uid),{photo:u})}catch(x){toast(friendly(x))}},
+  openExchange,doExchange,xMax:()=>{$('#xAmt').value=fmt(me.balanceLM,8);calcExch()},
+  openWithdraw,doWithdraw,closeAll
+};
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const f=A[el.dataset.act];if(f)f(el.dataset,el)});
+
+applyLang();
+</script>
+</body>
+</html>
